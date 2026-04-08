@@ -4,12 +4,12 @@ import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, db } from "@/lib/firebase/firebase";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { doc, getDoc } from "firebase/firestore";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function LoginContent() {
   const [email, setEmail] = useState("");
@@ -33,15 +33,7 @@ export default function LoginContent() {
       if (docSnap.exists()) {
         const userData = docSnap.data();
 
-        if (userData?.type !== "enterprise" && userData?.type !== "candidate") {
-          throw new Error();
-        }
-
-        if (userData?.type === "enterprise") {
-          router.push("/dashboard-enterprise");
-        } else if (userData?.type === "candidate") {
-          router.push("/dashboard-candidate");
-        }
+        router.push("/dash");
       }
     } catch (error) {
       toast("Email ou senha inválidos.");
@@ -80,6 +72,9 @@ export default function LoginContent() {
           Fazer login
         </Button>
       </form>
+      <Link href="/forgot-password">
+        <span className="text-blue-500 text-sm">Esqueceu a senha?</span>
+      </Link>
     </div>
   );
 }
