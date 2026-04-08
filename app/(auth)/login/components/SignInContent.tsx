@@ -24,7 +24,7 @@ export const SignInContent = () => {
           <div className="text-sm text-gray-600 space-y-1">
             <p>
               <span className="font-medium">Candidato:</span>{" "}
-              candidato@talents.com
+              usuario@moodtracker.com
             </p>
             <p>
               {" "}
