@@ -1,14 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { useUser } from "@/context/UserContext";
 import { MapPin, LogOut } from "lucide-react";
 import { HabitList } from "@/app/components/HabitList";
 import { HistoryTable } from "@/app/components/HistoryTable";
 import { MoodPicker } from "@/app/components/MoodPicker";
+import { auth } from "@/lib/firebase/firebase";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation"; // Entre chaves {}import { toast } from "sonner";
+import { toast } from "sonner";
 
 export default function Dashboard() {
-  // Estados (Mesma lógica do anterior, mas componentes separados)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const [history, setHistory] = useState([]);
@@ -20,6 +23,9 @@ export default function Dashboard() {
     { name: "Estudos", status: false },
   ]);
 
+  const user = useUser();
+  const router = useRouter();
+
   // Efeito de carregar data
   const today = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
@@ -28,42 +34,21 @@ export default function Dashboard() {
     day: "numeric",
   });
 
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-[#F8F9FD] flex items-center justify-center p-6 text-slate-800">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm bg-white p-10 rounded-[3rem] shadow-xl shadow-purple-100"
-        >
-          <div className="w-20 h-20 bg-purple-100 rounded-3xl flex items-center justify-center text-4xl mb-6 mx-auto">
-            💜
-          </div>
-          <h1 className="text-3xl font-bold text-center mb-2">Health Hub</h1>
-          <p className="text-gray-400 text-center mb-8 text-sm">
-            Organize sua rotina com estilo.
-          </p>
-          <input
-            type="text"
-            className="w-full p-4 bg-gray-50 rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-purple-400 transition-all border-none"
-            placeholder="Como quer ser chamado?"
-            onChange={(e) => setUserName(e.target.value)}
-          />
-          <button
-            onClick={() => setIsLoggedIn(true)}
-            className="w-full bg-[#6C5CE7] py-4 rounded-2xl text-white font-bold shadow-lg shadow-purple-200 hover:bg-[#5b4bc4] transition-all"
-          >
-            Entrar
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast.success("Sessão encerrada!");
+
+      router.push("/login");
+    } catch (error) {
+      toast.error("Erro ao sair. Tente novamente.");
+      console.error("Erro no logout:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F9FD] p-4 md:p-10 font-rubik text-slate-800">
       <div className="max-w-7xl mx-auto">
-        {/* HEADER */}
         <motion.header
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -71,10 +56,13 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-3xl font-black tracking-tight">
-              Hey, {userName}!
+              Hey, {user.user?.username}!
             </h1>
             <p className="text-gray-400 text-sm mt-1 capitalize">{today}</p>
-            <button className="text-red-400 text-[10px] font-bold uppercase tracking-widest mt-3 flex items-center gap-1 hover:text-red-600">
+            <button
+              onClick={handleLogout}
+              className="text-red-400 text-[10px] font-bold uppercase tracking-widest mt-3 flex items-center gap-1 hover:text-red-600"
+            >
               <LogOut size={12} /> Encerrar Sessão
             </button>
           </div>
