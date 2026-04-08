@@ -1,7 +1,7 @@
 "use client";
 
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase/firebase"; // Importe apenas o auth
+import { auth } from "@/lib/firebase/firebase";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
@@ -22,16 +22,14 @@ export default function LoginContent() {
     setIsLoading(true);
 
     try {
-      // Aqui ele valida direto no serviço de Autenticação do Firebase
       await signInWithEmailAndPassword(auth, email, password);
 
       toast.success("Login realizado com sucesso!");
 
-      // Se chegou aqui, o Auth aprovou. Já pode mandar pro Dash.
-      router.push("/dash");
+      router.push("/dashboard");
     } catch (error: any) {
       console.error(error.code);
-      // Mensagens amigáveis baseadas no erro do Firebase
+
       if (error.code === "auth/invalid-credential") {
         toast.error("E-mail ou senha incorretos.");
       } else if (error.code === "auth/too-many-requests") {
