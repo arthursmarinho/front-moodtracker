@@ -1,13 +1,12 @@
 "use client";
 
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { auth, db } from "@/lib/firebase/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase/firebase"; // Importe apenas o auth
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { doc, getDoc } from "firebase/firestore";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -15,28 +14,33 @@ export default function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-      const user = userCredential.user;
+      // Aqui ele valida direto no serviço de Autenticação do Firebase
+      await signInWithEmailAndPassword(auth, email, password);
 
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
+      toast.success("Login realizado com sucesso!");
 
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-
-        router.push("/dash");
+      // Se chegou aqui, o Auth aprovou. Já pode mandar pro Dash.
+      router.push("/dash");
+    } catch (error: any) {
+      console.error(error.code);
+      // Mensagens amigáveis baseadas no erro do Firebase
+      if (error.code === "auth/invalid-credential") {
+        toast.error("E-mail ou senha incorretos.");
+      } else if (error.code === "auth/too-many-requests") {
+        toast.error("Muitas tentativas. Tente novamente mais tarde.");
+      } else {
+        toast.error("Erro ao fazer login. Tente novamente.");
       }
-    } catch (error) {
-      toast("Email ou senha inválidos.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -48,7 +52,9 @@ export default function LoginContent() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Digite seu email..."
+          placeholder="Seu e-mail"
+          required
+          disabled={isLoading}
         />
 
         <div className="relative">
@@ -56,24 +62,35 @@ export default function LoginContent() {
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Digite sua senha..."
+            placeholder="Sua senha"
             className="pr-10"
+            required
+            disabled={isLoading}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            disabled={isLoading}
           >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
 
-        <Button type="submit" className="w-full">
-          Fazer login
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Entrando...
+            </>
+          ) : (
+            "Fazer login"
+          )}
         </Button>
       </form>
-      <Link href="/forgot-password">
-        <span className="text-blue-500 text-sm">Esqueceu a senha?</span>
+
+      <Link href="/forgot-password text-sm text-blue-500 hover:underline">
+        Esqueceu a senha?
       </Link>
     </div>
   );
