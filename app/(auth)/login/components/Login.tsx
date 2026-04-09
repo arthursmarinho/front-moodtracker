@@ -86,10 +86,6 @@ export default function LoginContent() {
           )}
         </Button>
       </form>
-
-      <Link href="/forgot-password text-sm text-blue-500 hover:underline">
-        Esqueceu a senha?
-      </Link>
     </div>
   );
 }
