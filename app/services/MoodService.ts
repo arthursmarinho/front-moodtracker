@@ -1,7 +1,8 @@
 import axios from "axios";
 import { PostMoodDto } from "./dto/mood.dto";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+console.log("api: ", API_URL);
 
 export const MoodService = {
   async getAll(startDate?: string, endDate?: string) {
