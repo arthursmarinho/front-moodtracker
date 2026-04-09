@@ -1,21 +1,20 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useUser } from "@/context/UserContext";
-import { MapPin, LogOut } from "lucide-react";
-import { HabitList } from "@/app/components/HabitList";
-import { HistoryTable } from "@/app/components/HistoryTable";
-import { MoodPicker } from "@/app/components/MoodPicker";
-import { auth } from "@/lib/firebase/firebase";
-import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { HabitList } from "@/app/(main)/dashboard/components/HabitList";
+import { HistoryTable } from "@/app/(main)/dashboard/components/HistoryTable";
+import { MoodPicker } from "@/app/(main)/dashboard/components/MoodPicker";
+import Header from "./components/Header";
+import { MoodService } from "@/app/services/MoodService";
 import { toast } from "sonner";
 
 export default function Dashboard() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState("");
   const [history, setHistory] = useState([]);
   const [mood, setMood] = useState(0);
+  const [note, setNote] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [habits, setHabits] = useState([
     { name: "Água 2L", status: false },
     { name: "Exercícios", status: false },
@@ -23,54 +22,85 @@ export default function Dashboard() {
     { name: "Estudos", status: false },
   ]);
 
-  const user = useUser();
-  const router = useRouter();
+  const { user } = useUser();
 
-  const today = new Date().toLocaleDateString("pt-BR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const loadHistory = async () => {
+    const data = await MoodService.getAll(startDate, endDate);
+    setHistory(data);
+  };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      toast.success("Sessão encerrada!");
+  useEffect(() => {
+    loadHistory();
+  }, [startDate, endDate]);
 
-      router.push("/login");
-    } catch (error) {
-      toast.error("Erro ao sair. Tente novamente.");
-      console.error("Erro no logout:", error);
+  const postMood = async () => {
+    const selectedHabits = habits.filter((h) => h.status).map((h) => h.name);
+
+    const { ok } = await MoodService.createPost({
+      author: user?.username || "Arthur Marinho",
+      mood: mood,
+      habits: selectedHabits,
+      content: note,
+    });
+
+    if (ok) {
+      console.log(
+        "user: ",
+        user?.username,
+        "mood: ",
+        mood,
+        "hhabitos: ",
+        habits,
+        "notas: ",
+        note,
+      );
+      toast.success("Mood criado com Sucesso!");
+      setNote("");
+      setMood(0);
+      setHabits(habits.map((h) => ({ ...h, status: false })));
+      loadHistory();
     }
+  };
+
+  const handleDelete = async (id: number) => {
+    await MoodService.deletePost(id);
+    toast.error("Deletado com sucesso");
+    loadHistory();
   };
 
   return (
     <div className="min-h-screen bg-[#F8F9FD] p-4 md:p-10 font-rubik text-slate-800">
       <div className="max-w-7xl mx-auto">
-        <motion.header
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex justify-between items-start mb-12"
-        >
-          <div>
-            <h1 className="text-3xl font-black tracking-tight">
-              Hey, {user.user?.username}!
-            </h1>
-            <p className="text-gray-400 text-sm mt-1 capitalize">{today}</p>
-            <button
-              onClick={handleLogout}
-              className="text-red-400 text-[10px] font-bold uppercase tracking-widest mt-3 flex items-center gap-1 hover:text-red-600"
-            >
-              <LogOut size={12} /> Encerrar Sessão
-            </button>
-          </div>
-          <div className="hidden md:flex bg-white px-5 py-3 rounded-2xl shadow-sm border border-gray-100 items-center gap-2 font-bold text-xs">
-            <MapPin size={16} className="text-purple-500" /> Rocket Program
-          </div>
-        </motion.header>
+        <Header />
 
-        {/* GRID PRINCIPAL */}
+        <div className="flex gap-4 mb-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-100 items-center overflow-x-auto">
+          <span className="text-sm font-bold text-gray-500 ml-2 whitespace-nowrap">
+            Filtrar:
+          </span>
+          <input
+            type="date"
+            value={startDate}
+            className="text-sm bg-gray-50 p-2 rounded-xl outline-none"
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <span className="text-gray-300">até</span>
+          <input
+            type="date"
+            value={endDate}
+            className="text-sm bg-gray-50 p-2 rounded-xl outline-none"
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+          <button
+            onClick={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
+            className="text-xs text-purple-600 font-bold px-2"
+          >
+            Limpar
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
@@ -89,10 +119,15 @@ export default function Dashboard() {
             <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100">
               <textarea
                 placeholder="Alguma nota especial?"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
                 className="w-full bg-gray-50 rounded-2xl p-4 text-sm border-none outline-none focus:ring-2 focus:ring-purple-200"
                 rows={3}
               />
-              <button className="w-full bg-[#6C5CE7] text-white py-4 rounded-2xl font-bold mt-4 shadow-xl shadow-purple-100">
+              <button
+                onClick={postMood}
+                className="w-full bg-[#6C5CE7] text-white py-4 rounded-2xl font-bold mt-4 shadow-xl shadow-purple-100 transition-all hover:bg-[#5b4bc4]"
+              >
                 Salvar Dia
               </button>
             </div>
@@ -103,7 +138,7 @@ export default function Dashboard() {
             animate={{ x: 0, opacity: 1 }}
             className="lg:col-span-8"
           >
-            <HistoryTable entries={history} onDelete={(id) => {}} />
+            <HistoryTable entries={history} onDelete={handleDelete} />
           </motion.div>
         </div>
       </div>
