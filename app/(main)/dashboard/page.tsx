@@ -8,7 +8,7 @@ import { HistoryTable } from "@/app/components/HistoryTable";
 import { MoodPicker } from "@/app/components/MoodPicker";
 import { auth } from "@/lib/firebase/firebase";
 import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation"; // Entre chaves {}import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export default function Dashboard() {
@@ -26,7 +26,6 @@ export default function Dashboard() {
   const user = useUser();
   const router = useRouter();
 
-  // Efeito de carregar data
   const today = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
     year: "numeric",
