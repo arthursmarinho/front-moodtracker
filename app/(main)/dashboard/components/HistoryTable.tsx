@@ -27,7 +27,6 @@ export function HistoryTable({
     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 h-full">
       <div className="flex justify-between items-center mb-8">
         <h3 className="font-bold text-gray-800 text-lg">Histórico Recente</h3>
-        <CalendarDays className="text-gray-300" size={20} />
       </div>
 
       <div className="overflow-x-auto">
