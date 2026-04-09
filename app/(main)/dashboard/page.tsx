@@ -13,8 +13,7 @@ export default function Dashboard() {
   const [history, setHistory] = useState([]);
   const [mood, setMood] = useState(0);
   const [note, setNote] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [loading, setLoading] = useState(false);
   const [habits, setHabits] = useState([
     { name: "Água 2L", status: false },
     { name: "Exercícios", status: false },
@@ -24,48 +23,31 @@ export default function Dashboard() {
 
   const { user } = useUser();
 
-  const loadHistory = async () => {
-    const data = await MoodService.getAll(startDate, endDate);
-    setHistory(data);
-  };
-
-  useEffect(() => {
-    loadHistory();
-  }, [startDate, endDate]);
-
   const postMood = async () => {
-    const selectedHabits = habits.filter((h) => h.status).map((h) => h.name);
+  if (loading) return; 
 
-    const { ok } = await MoodService.createPost({
-      author: user?.username || "Arthur Marinho",
-      mood: mood,
-      habits: selectedHabits,
-      content: note,
-    });
+  setLoading(true);
 
-    if (ok) {
-      console.log(
-        "user: ",
-        user?.username,
-        "mood: ",
-        mood,
-        "hhabitos: ",
-        habits,
-        "notas: ",
-        note,
-      );
-      toast.success("Mood criado com Sucesso!");
-      setNote("");
-      setMood(0);
-      setHabits(habits.map((h) => ({ ...h, status: false })));
-      loadHistory();
-    }
-  };
+  const selectedHabits = habits.filter((h) => h.status).map((h) => h.name);
+
+  const { ok } = await MoodService.createPost({
+    author: user?.username || "Arthur Marinho",
+    mood: mood,
+    habits: selectedHabits,
+    content: note,
+  });
+
+  if (ok) {
+    toast.success("Mood criado com Sucesso!");
+    setNote("");
+    setMood(0);
+    setHabits(habits.map((h) => ({ ...h, status: false })));
+  }
+
 
   const handleDelete = async (id: number) => {
     await MoodService.deletePost(id);
     toast.error("Deletado com sucesso");
-    loadHistory();
   };
 
   return (
@@ -96,12 +78,17 @@ export default function Dashboard() {
                 className="w-full bg-gray-50 rounded-2xl p-4 text-sm border-none outline-none focus:ring-2 focus:ring-purple-200"
                 rows={3}
               />
-              <button
-                onClick={postMood}
-                className="w-full bg-[#6C5CE7] text-white py-4 rounded-2xl font-bold mt-4 shadow-xl shadow-purple-100 transition-all hover:bg-[#5b4bc4]"
-              >
-                Salvar Dia
-              </button>
+           <button
+  onClick={postMood}
+  disabled={loading}
+  className={`w-full py-4 rounded-2xl font-bold mt-4 shadow-xl transition-all
+    ${loading 
+      ? "bg-gray-400 cursor-not-allowed" 
+      : "bg-[#6C5CE7] text-white hover:bg-[#5b4bc4] shadow-purple-100"}
+  `}
+>
+  {loading ? "Salvando..." : "Salvar Dia"}
+</button>
             </div>
           </motion.div>
 
