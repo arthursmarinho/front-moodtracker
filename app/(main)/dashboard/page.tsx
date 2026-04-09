@@ -13,6 +13,8 @@ export default function Dashboard() {
   const [history, setHistory] = useState([]);
   const [mood, setMood] = useState(0);
   const [note, setNote] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [habits, setHabits] = useState([
     { name: "Água 2L", status: false },
@@ -23,10 +25,25 @@ export default function Dashboard() {
 
   const { user } = useUser();
 
+  const loadHistory = async () => {
+    const data = await MoodService.getAll(startDate, endDate);
+    setHistory(data);
+  };
+
+  useEffect(() => {
+    loadHistory();
+  }, [startDate, endDate]);
+
   const postMood = async () => {
     if (loading) return;
 
     setLoading(true);
+
+    if (mood === 0) {
+      toast.warning("Selecione um mood");
+      setLoading(false);
+      return;
+    }
 
     const selectedHabits = habits.filter((h) => h.status).map((h) => h.name);
 
@@ -43,11 +60,15 @@ export default function Dashboard() {
       setMood(0);
       setHabits(habits.map((h) => ({ ...h, status: false })));
     }
+
+    setLoading(false);
+    loadHistory();
   };
 
   const handleDelete = async (id: number) => {
     await MoodService.deletePost(id);
     toast.error("Deletado com sucesso");
+    loadHistory();
   };
 
   return (
