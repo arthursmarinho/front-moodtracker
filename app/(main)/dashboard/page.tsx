@@ -73,34 +73,6 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto">
         <Header />
 
-        <div className="flex gap-4 mb-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-100 items-center overflow-x-auto">
-          <span className="text-sm font-bold text-gray-500 ml-2 whitespace-nowrap">
-            Filtrar:
-          </span>
-          <input
-            type="date"
-            value={startDate}
-            className="text-sm bg-gray-50 p-2 rounded-xl outline-none"
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-          <span className="text-gray-300">até</span>
-          <input
-            type="date"
-            value={endDate}
-            className="text-sm bg-gray-50 p-2 rounded-xl outline-none"
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-          <button
-            onClick={() => {
-              setStartDate("");
-              setEndDate("");
-            }}
-            className="text-xs text-purple-600 font-bold px-2"
-          >
-            Limpar
-          </button>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
